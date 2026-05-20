@@ -73,6 +73,14 @@ border-radius:10px;
 
 }
 
+.edit{
+
+background:#2196f3;
+
+margin-right:10px;
+
+}
+
 </style>
 
 </head>
@@ -131,6 +139,15 @@ echo $row['price'];
 ?>
 
 <br><br>
+
+<a
+class="btn edit"
+href="editProduct.php?id=<?php echo $row['id']; ?>"
+>
+
+Edit
+
+</a>
 
 <a
 class="btn"
