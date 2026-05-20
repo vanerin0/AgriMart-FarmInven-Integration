@@ -2,68 +2,151 @@
 
 session_start();
 
-$conn = new mysqli(
-    "localhost",
-    "root",
-    "",
-    "agrimart_db"
+$conn=new mysqli(
+"localhost",
+"root",
+"",
+"agrimart_db"
 );
 
-$email = $_POST['email'];
-$password = $_POST['password'];
+if($conn->connect_error){
 
-$result = $conn->query(
+die(
+"Database Error"
+);
 
-    "SELECT *
+}
+
+$email=$_POST['email'];
+
+$password=$_POST['password'];
+
+
+$result=$conn->query(
+
+"SELECT *
 FROM users
 WHERE email='$email'"
 
 );
 
-if (
-    $result->num_rows == 0
-) {
 
-    die("User not found");
+if(
+$result->num_rows==0
+){
+
+die(
+
+"User not found"
+
+);
+
 }
 
-$user =
-    $result->fetch_assoc();
 
-if (
-    password_verify(
-        $password,
-        $user['password']
-    )
-) {
+$user=
+$result->fetch_assoc();
 
-    $_SESSION['id'] = $user['id'];
 
-    $_SESSION['role'] = $user['role'];
 
-    $_SESSION['fullname'] = $user['fullname'];
+if(
 
-    if (
-        $user['role'] == "admin"
-    ) {
+password_verify(
 
-        header(
-            "location:approveSeller.php"
-        );
-    } elseif (
-        $user['role'] == "seller"
-    ) {
+$password,
 
-        header(
-            "location:sellerDashboard.php"
-        );
-    } else {
+$user['password']
 
-        header(
-            "location:product.php"
-        );
-    }
-} else {
+)
 
-    die("Wrong Password");
+){
+
+/* session data */
+
+$_SESSION['id']=$user['id'];
+
+$_SESSION['role']=$user['role'];
+
+$_SESSION['fullname']=$user['fullname'];
+
+$_SESSION['email']=$user['email'];
+
+
+/* role routing */
+
+if(
+$user['role']=="admin"
+){
+
+header(
+
+"location:adminDashboard.php"
+
+);
+
+exit();
+
 }
+
+
+elseif(
+$user['role']=="seller"
+){
+
+$check=$conn->query(
+
+"SELECT *
+FROM seller_profiles
+WHERE user_id='".$_SESSION['id']."'
+AND status='Approved'"
+
+);
+
+
+if(
+$check->num_rows>0
+){
+
+header(
+"location:sellerDashboard.php"
+);
+
+}else{
+
+header(
+"location:sellerRegister.php"
+);
+
+}
+
+exit();
+
+}
+
+
+else{
+
+header(
+
+"location:product.php"
+
+);
+
+exit();
+
+}
+
+
+}
+
+else{
+
+die(
+
+"Wrong Password"
+
+);
+
+}
+
+?>
