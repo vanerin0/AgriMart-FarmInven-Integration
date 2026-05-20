@@ -79,6 +79,18 @@ $item['quantity'];
 
 }
 
+// Check stock availability before creating order
+foreach($_SESSION['cart'] as $item){
+	$pq = $conn->query("SELECT stock_level, product_name FROM products WHERE product_uuid='".$item['product_uuid']."'");
+	if($pq->num_rows==0){
+		die('Product not found: '.$item['name']);
+	}
+	$prow = $pq->fetch_assoc();
+	if((int)$item['quantity'] > (int)$prow['stock_level']){
+		die('Insufficient stock for: '. $prow['product_name']);
+	}
+}
+
 
 /* create order */
 
@@ -136,6 +148,11 @@ VALUES
 
 );
 
+}
+
+// reduce product stock levels
+foreach($_SESSION['cart'] as $item){
+	$conn->query("UPDATE products SET stock_level = stock_level - " . (int)$item['quantity'] . " WHERE product_uuid='".$item['product_uuid']."'");
 }
 
 

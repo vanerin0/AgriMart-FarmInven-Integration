@@ -32,6 +32,11 @@ die("Product not found");
 $row=
 $product->fetch_assoc();
 
+// prevent adding when out of stock
+if((int)$row['stock_level'] <= 0){
+	die("Product is out of stock");
+}
+
 
 if(
 !isset($_SESSION['cart'])
@@ -54,7 +59,12 @@ if(
 $item['id']==$id
 ){
 
-$item['quantity']++;
+		// only increase if it won't exceed available stock
+		if($item['quantity'] < (int)$row['stock_level']){
+			$item['quantity']++;
+		}else{
+			die("Cannot add more than available stock");
+		}
 
 $found=true;
 

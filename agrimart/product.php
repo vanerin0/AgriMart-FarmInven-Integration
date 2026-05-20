@@ -591,15 +591,19 @@ echo $row['price'];
 Stock:
 
 <?php
-echo $row['stock_level'];
+if((int)$row['stock_level']>0){
+	echo $row['stock_level'];
+}else{
+	echo "Out of Stock";
+}
 ?>
 
 </div>
 
 
-<a
-href="addToCart.php?id=<?php echo $row['id'];?>"
->
+<?php if((int)$row['stock_level']>0){ ?>
+
+<a href="addToCart.php?id=<?php echo $row['id'];?>">
 
 <button>
 
@@ -608,6 +612,14 @@ Add To Cart 🛒
 </button>
 
 </a>
+
+<?php } else { ?>
+
+<button disabled style="opacity:.7;cursor:not-allowed;">
+Out of Stock
+</button>
+
+<?php } ?>
 
 
 </div>
