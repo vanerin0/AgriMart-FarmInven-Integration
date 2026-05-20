@@ -2,84 +2,68 @@
 
 session_start();
 
-$conn=new mysqli(
-"localhost",
-"root",
-"",
-"agrimart_db"
+$conn = new mysqli(
+    "localhost",
+    "root",
+    "",
+    "agrimart_db"
 );
 
-$email=$_POST['email'];
-$password=$_POST['password'];
+$email = $_POST['email'];
+$password = $_POST['password'];
 
-$result=$conn->query(
+$result = $conn->query(
 
-"SELECT *
+    "SELECT *
 FROM users
 WHERE email='$email'"
 
 );
 
-if(
-$result->num_rows==0
-){
+if (
+    $result->num_rows == 0
+) {
 
-die(
-"User not found"
-);
-
+    die("User not found");
 }
 
-$user=
-$result->fetch_assoc();
+$user =
+    $result->fetch_assoc();
 
-if(
-password_verify(
-$password,
-$user['password']
-)
-){
+if (
+    password_verify(
+        $password,
+        $user['password']
+    )
+) {
 
-$_SESSION['id']=$user['id'];
+    $_SESSION['id'] = $user['id'];
 
-$_SESSION['role']=$user['role'];
+    $_SESSION['role'] = $user['role'];
 
-$_SESSION['fullname']=$user['fullname'];
+    $_SESSION['fullname'] = $user['fullname'];
 
-if(
-$user['role']=="admin"
-){
+    if (
+        $user['role'] == "admin"
+    ) {
 
-header(
-"location:approveOrder.php"
-);
+        header(
+            "location:approveSeller.php"
+        );
+    } elseif (
+        $user['role'] == "seller"
+    ) {
 
-}
+        header(
+            "location:sellerDashboard.php"
+        );
+    } else {
 
-elseif(
-$user['role']=="seller"
-){
+        header(
+            "location:product.php"
+        );
+    }
+} else {
 
-header(
-"location:sellerDashboard.php"
-);
-
-}
-
-else{
-
-header(
-"location:product.php"
-);
-
-}
-
-}
-
-else{
-
-die(
-"Wrong Password"
-);
-
+    die("Wrong Password");
 }

@@ -31,6 +31,39 @@ $stock=$_POST['stock_level'];
 
 $price=$_POST['price'];
 
+$image=$row['image'];
+
+
+/* upload new image if selected */
+
+if(
+isset($_FILES['image'])
+&&
+$_FILES['image']['name']!=""
+
+){
+
+$filename=
+time().
+"_".
+$_FILES['image']['name'];
+
+$tmp=
+$_FILES['image']['tmp_name'];
+
+move_uploaded_file(
+
+$tmp,
+
+"uploads/".$filename
+
+);
+
+$image=$filename;
+
+}
+
+
 $conn->query(
 
 "UPDATE products
@@ -41,7 +74,9 @@ product_name='$name',
 
 stock_level='$stock',
 
-price='$price'
+price='$price',
+
+image='$image'
 
 WHERE id='$id'"
 
@@ -50,6 +85,8 @@ WHERE id='$id'"
 header(
 "location:manageProducts.php"
 );
+
+exit();
 
 }
 
@@ -70,7 +107,12 @@ body{
 
 font-family:Poppins;
 
-background:#f5f7fa;
+background:
+linear-gradient(
+135deg,
+#eef7ee,
+#f5f7fa
+);
 
 padding:50px;
 
@@ -78,7 +120,7 @@ padding:50px;
 
 .card{
 
-max-width:600px;
+max-width:650px;
 
 margin:auto;
 
@@ -93,6 +135,12 @@ box-shadow:
 
 }
 
+h1{
+
+margin-bottom:20px;
+
+}
+
 input{
 
 width:100%;
@@ -102,6 +150,28 @@ padding:15px;
 margin-bottom:15px;
 
 border-radius:12px;
+
+border:1px solid #ddd;
+
+}
+
+.preview{
+
+margin-bottom:20px;
+
+text-align:center;
+
+}
+
+.preview img{
+
+width:200px;
+
+height:200px;
+
+object-fit:cover;
+
+border-radius:15px;
 
 border:1px solid #ddd;
 
@@ -123,6 +193,14 @@ border-radius:12px;
 
 cursor:pointer;
 
+font-size:16px;
+
+}
+
+button:hover{
+
+opacity:.9;
+
 }
 
 </style>
@@ -139,15 +217,44 @@ cursor:pointer;
 
 </h1>
 
-<br>
+<div class="preview">
 
-<form method="POST">
+<?php
+
+if(
+!empty($row['image'])
+){
+
+?>
+
+<img
+src="uploads/<?php echo $row['image'];?>"
+>
+
+<?php
+
+}else{
+
+echo "<h2>🥬</h2>";
+
+}
+
+?>
+
+</div>
+
+
+<form
+method="POST"
+enctype="multipart/form-data"
+>
 
 <input
 name="product_name"
 value="<?php echo $row['product_name'];?>"
 required
 >
+
 
 <input
 type="number"
@@ -156,6 +263,7 @@ value="<?php echo $row['stock_level'];?>"
 required
 >
 
+
 <input
 type="number"
 step=".01"
@@ -163,6 +271,13 @@ name="price"
 value="<?php echo $row['price'];?>"
 required
 >
+
+
+<input
+type="file"
+name="image"
+>
+
 
 <button
 name="update"
