@@ -1,171 +1,271 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>FarmInven Inventory</title>
 
-    <meta charset="UTF-8" />
+<head>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FarmInven Inventory</title>
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+<meta charset="UTF-8">
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1"
+>
 
-    <style>
-      body {
-        background: linear-gradient(135deg, #eef7ee, #f5f7fa);
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet"
+>
 
-        font-family: Arial, sans-serif;
-      }
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+rel="stylesheet"
+>
 
-      .navbar {
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      }
+<style>
 
-      .card {
-        border: none;
+body{
 
-        border-radius: 20px;
+background:
+linear-gradient(
+135deg,
+#eef7ee,
+#f5f7fa
+);
 
-        overflow: hidden;
+}
 
-        transition: 0.3s;
+.navbar{
 
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-      }
+box-shadow:
+0 4px 15px rgba(0,0,0,.1);
 
-      .card:hover {
-        transform: translateY(-6px);
-      }
+}
 
-      .product-image {
-        height: 220px;
+.card{
 
-        object-fit: cover;
-      }
+border:none;
 
-      .stock {
-        font-weight: bold;
+border-radius:20px;
 
-        color: #198754;
-      }
+overflow:hidden;
 
-      .uuid {
-        font-size: 12px;
+transition:.3s;
 
-        color: gray;
-      }
+box-shadow:
+0 8px 20px rgba(0,0,0,.08);
 
-      .title {
-        margin-bottom: 25px;
-      }
-    </style>
-  </head>
+}
 
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-      <div class="container">
-        <a class="navbar-brand fw-bold" href="#"> 🌱 FarmInven </a>
+.card:hover{
 
-        <div>
-          <a href="/dashboard" class="btn btn-light me-2">
-            <i class="bi bi-speedometer2"></i>
+transform:
+translateY(-6px);
 
-            Dashboard
-          </a>
+}
 
-          <a href="/addProduct" class="btn btn-warning me-2">
-            <i class="bi bi-plus-circle"></i>
+.product-image{
 
-            Add Product
-          </a>
+height:220px;
 
-          <a href="/logs" class="btn btn-info me-2">
-            <i class="bi bi-clock-history"></i>
+width:100%;
 
-            Logs
-          </a>
+object-fit:cover;
 
-          <a
+}
+
+.stock{
+
+font-weight:bold;
+
+color:#198754;
+
+}
+
+.uuid{
+
+font-size:12px;
+
+color:gray;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<nav class="navbar navbar-dark bg-success p-3">
+
+<div class="container">
+
+<h3>
+
+🌾 FarmInven Inventory
+
+</h3>
+
+<div>
+
+<a
+href="/dashboard"
+class="btn btn-light"
+>
+
+Dashboard
+
+</a>
+
+
+<a
+href="/addProduct"
+class="btn btn-primary"
+>
+
++ Add Product
+
+</a>
+
+
+<a
+href="/logs"
+class="btn btn-warning"
+>
+
+Logs
+
+</a>
+
+
+<a
 href="/reports"
-class="btn btn-secondary me-2"
+class="btn btn-info"
 >
 
 Reports
 
 </a>
 
-          <a href="/logout" class="btn btn-danger"> Logout </a>
-        </div>
-      </div>
-    </nav>
+<a
+href="/logout"
+class="btn btn-dark"
+>
 
-    <div class="container mt-5">
-      <div class="title">
-        <h1>Inventory Products</h1>
+Logout
 
-        <p>Manage your inventory products and stocks</p>
-      </div>
+</a>
 
-      <div class="row">
-        {% for p in products %}
+</div>
 
-        <div class="col-md-4 mb-4">
-          <div class="card h-100">
-            {% if p[4] %}
+</div>
 
-            <img src="/static/uploads/{{p[4]}}" class="product-image" />
+</nav>
 
-            {% else %}
 
-            <img
-              src="https://placehold.co/600x400?text=No+Image"
-              class="product-image"
-            />
 
-            {% endif %}
+<div class="container mt-5">
 
-            <div class="card-body">
-              <h4>{{p[1]}}</h4>
 
-              <div class="uuid">UUID: {{p[2]}}</div>
+<div class="row">
 
-              <br />
 
-              <div class="stock">Stock: {{p[3]}}</div>
+{% for p in products %}
 
-              <br />
 
-              <a
-                href="/editProduct/{{p[0]}}"
-                class="btn btn-warning w-100 mb-2"
-              >
-                <i class="bi bi-pencil-square"></i>
+<div class="col-md-4 mb-4">
 
-                Edit Product
-              </a>
+<div class="card">
 
-              <a
-                href="/deleteProduct/{{p[0]}}"
-                class="btn btn-danger w-100"
-                onclick="return confirm('Delete this product?');"
-              >
-                <i class="bi bi-trash"></i>
 
-                Delete Product
-              </a>
-            </div>
-          </div>
-        </div>
+<img
 
-        {% endfor %}
-      </div>
-    </div>
-  </body>
+src="{{ url_for('static', filename='uploads/' ~ p[4]) }}"
+
+alt="{{ p[1] }}"
+
+class="product-image"
+
+>
+
+
+<div class="card-body">
+
+<h4>
+
+{{p[1]}}
+
+</h4>
+
+
+<div class="uuid">
+
+UUID:
+
+{{p[2]}}
+
+</div>
+
+
+<br>
+
+
+<div class="stock">
+
+Stock:
+
+{{p[3]}}
+
+</div>
+
+
+<br>
+
+
+<a
+
+href="/editProduct/{{p[0]}}"
+
+class="btn btn-success"
+
+>
+
+Edit
+
+</a>
+
+
+<a
+
+href="/deleteProduct/{{p[0]}}"
+
+class="btn btn-danger"
+
+onclick="return confirm('Delete product?')"
+
+>
+
+Delete
+
+</a>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+{% endfor %}
+
+
+</div>
+
+</div>
+
+
+</body>
+
 </html>

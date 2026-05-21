@@ -533,7 +533,9 @@ if(
 
 ?>
 
-<img src="/API/AgriMart-FarmInven-Integration/agrimart/uploads/<?php echo $row['image'];?>">
+<img
+src="http://127.0.0.1:5000/static/uploads/<?php echo $row['image'];?>"
+>
 
 <?php
 

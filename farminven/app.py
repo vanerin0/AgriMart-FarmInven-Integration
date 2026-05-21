@@ -3,6 +3,8 @@ from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
+from flask import *
+
 import os
 import uuid
 import requests
@@ -345,227 +347,65 @@ def reports():
 @app.route("/products")
 def products():
 
-    if "user_id" not in session:
-
-        return redirect("/login")
-
     cur=mysql.connection.cursor()
 
     cur.execute(
-    """
-    SELECT *
-    FROM farm_products
-    ORDER BY id DESC
-    """
+    "SELECT * FROM farm_products"
     )
 
     products=cur.fetchall()
-
-    cur.close()
 
     return render_template(
     "products.html",
     products=products
     )
-
-
+    
 # ==========================
 # ADD PRODUCT
 # ==========================
 
-@app.route(
-"/addProduct",
-methods=["GET","POST"]
-)
-
+@app.route("/addProduct")
 def addProduct():
-
-    if "user_id" not in session:
-
-        return redirect("/login")
-
-
-    if request.method=="POST":
-
-        product_name=request.form["product_name"]
-
-        stock_level=request.form["stock_level"]
-
-        image=request.files["product_image"]
-
-
-        filename=""
-
-
-        if image:
-
-            filename=secure_filename(
-            image.filename
-            )
-
-            image.save(
-
-            os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            filename
-            )
-
-            )
-
-
-        product_uuid=str(
-        uuid.uuid4()
-        )
-
-
-        cur=mysql.connection.cursor()
-
-
-        cur.execute(
-
-        """
-        INSERT INTO farm_products
-        (
-        product_name,
-        product_uuid,
-        stock_level,
-        product_image
-        )
-
-        VALUES
-        (%s,%s,%s,%s)
-
-        """,
-
-        (
-        product_name,
-        product_uuid,
-        stock_level,
-        filename
-        )
-
-        )
-
-        mysql.connection.commit()
-
-        cur.close()
-
-        return redirect(
-        "/products"
-        )
-
 
     return render_template(
     "addProduct.html"
     )
-
+    
 # ==========================
 # EDIT PRODUCT
 # ==========================
 
-@app.route(
-"/editProduct/<int:id>",
-methods=["GET","POST"]
-)
-
+@app.route("/editProduct/<id>")
 def editProduct(id):
-
-    if "user_id" not in session:
-
-        return redirect("/login")
-
 
     cur=mysql.connection.cursor()
 
-
-    if request.method=="POST":
-
-        name=request.form["product_name"]
-
-        stock=request.form["stock_level"]
-
-
-        cur.execute(
-        """
-        SELECT *
-        FROM farm_products
-        WHERE id=%s
-        """,
-        (id,)
-        )
-
-        old=cur.fetchone()
-
-
-        oldStock=old[3]
-
-        uuid=old[2]
-
-
-        cur.execute(
-        """
-        UPDATE farm_products
-
-        SET product_name=%s,
-        stock_level=%s
-
-        WHERE id=%s
-        """,
-
-        (
-        name,
-        stock,
-        id
-        )
-        )
-
-
-        cur.execute(
-        """
-        INSERT INTO inventory_logs
-        (
-        product_uuid,
-        product_name,
-        previous_stock,
-        new_stock,
-        action
-        )
-
-        VALUES
-        (%s,%s,%s,%s,%s)
-        """,
-
-        (
-        uuid,
-        name,
-        oldStock,
-        stock,
-        "Updated"
-        )
-
-        )
-
-        mysql.connection.commit()
-
-        cur.close()
-
-        return redirect("/products")
-
-
     cur.execute(
+
     """
+
     SELECT *
+
     FROM farm_products
+
     WHERE id=%s
+
     """,
-    (id,)
+
+    [id]
+
     )
 
     product=cur.fetchone()
 
+    cur.close()
+
     return render_template(
+
     "editProduct.html",
-    p=product
+
+    product=product
+
     )
 
 # ==========================
@@ -697,11 +537,7 @@ def exportReport():
 
     return redirect("/reports")
 
-# ==========================
-# LOGOUT
-# ==========================
 
-@app.route("/logout")
 def logout():
 
     session.clear()
@@ -710,6 +546,178 @@ def logout():
     "/login"
     )
 
+
+# ==========================
+# SAVE PRODUCT
+# ==========================
+
+@app.route("/save-product", methods=["POST"])
+def saveProduct():
+
+    import uuid
+    import requests
+    import os
+
+    product_name = request.form["product_name"]
+
+    stock_level = request.form["stock_level"]
+
+    image = request.files["product_image"]
+
+    filename = secure_filename(image.filename)
+
+    upload_path = os.path.join(
+        "static",
+        "uploads",
+        filename
+    )
+
+    image.save(upload_path)
+
+
+    product_uuid = str(
+        uuid.uuid4()
+    )
+
+
+    cur = mysql.connection.cursor()
+
+    cur.execute(
+
+    """
+
+    INSERT INTO farm_products(
+
+    product_name,
+    product_uuid,
+    stock_level,
+    product_image
+
+    )
+
+    VALUES(%s,%s,%s,%s)
+
+    """,
+
+    (
+
+    product_name,
+    product_uuid,
+    stock_level,
+    filename
+
+    )
+
+    )
+
+    mysql.connection.commit()
+
+
+    # AUTO SYNC TO AGRIMART
+
+    data={
+
+    "product_uuid":product_uuid,
+    "product_name":product_name,
+    "stock_level":stock_level,
+    "product_image":filename
+
+    }
+
+    try:
+
+        response=requests.post(
+
+        "http://localhost:3001/api/products/sync",
+
+        json=data
+
+        )
+
+        print(response.text)
+
+    except Exception as e:
+
+        print(e)
+
+
+    cur.close()
+
+
+    return redirect("/products")
+
+@app.route("/updateProduct/<int:id>",methods=["GET","POST"])
+def updateProduct(id):
+
+    cur=mysql.connection.cursor()
+
+    if request.method=="POST":
+
+        product_name=request.form["product_name"]
+        stock_level=request.form["stock_level"]
+
+        cur.execute(
+
+        """
+        UPDATE farm_products
+        SET product_name=%s,
+        stock_level=%s
+        WHERE id=%s
+        """,
+
+        (
+        product_name,
+        stock_level,
+        id
+        )
+
+        )
+
+        mysql.connection.commit()
+
+        # AUTO UPDATE AGRIMART
+        cur.execute(
+        "SELECT product_uuid,stock_level FROM farm_products WHERE id=%s",
+        (id,)
+        )
+
+        product=cur.fetchone()
+
+        import requests
+
+        try:
+
+            requests.post(
+
+            "http://localhost:3001/api/update-stock",
+
+            json={
+
+            "product_uuid":product[0],
+            "stock_level":product[1]
+
+            }
+
+            )
+
+        except:
+            print("API Sync Failed")
+
+
+        return redirect("/products")
+
+
+    cur.execute(
+    "SELECT * FROM farm_products WHERE id=%s",
+    (id,)
+    )
+
+    product=cur.fetchone()
+
+    return render_template(
+    "editProduct.html",
+    product=product
+    )
 
 # ==========================
 # START APP
