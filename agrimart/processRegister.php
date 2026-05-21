@@ -1,7 +1,5 @@
 <?php
 
-session_start();
-
 $conn=new mysqli(
 "localhost",
 "root",
@@ -9,10 +7,28 @@ $conn=new mysqli(
 "agrimart_db"
 );
 
+if($conn->connect_error){
+
+die("Database Error");
+
+}
+
+
+/* FORM DATA */
+
 $fullname=$_POST['fullname'];
+
 $email=$_POST['email'];
-$password=$_POST['password'];
+
+$password=password_hash(
+$_POST['password'],
+PASSWORD_DEFAULT
+);
+
 $role=$_POST['role'];
+
+
+/* CHECK IF EMAIL EXISTS */
 
 $check=$conn->query(
 
@@ -22,45 +38,88 @@ WHERE email='$email'"
 
 );
 
-if(
-$check->num_rows>0
-){
+if($check->num_rows>0){
 
 die(
-"Email already exists"
+
+"
+<h2 style='font-family:Arial'>
+Email already exists
+</h2>
+
+<a href='register.php'>
+Back
+</a>
+"
+
 );
 
 }
 
-$hash=
-password_hash(
-$password,
-PASSWORD_DEFAULT
-);
+
+/* INSERT USER */
 
 $conn->query(
 
-"INSERT INTO users
-(
+"INSERT INTO users(
+
 fullname,
 email,
 password,
 role
+
 )
 
-VALUES
-(
+VALUES(
+
 '$fullname',
 '$email',
-'$hash',
+'$password',
 '$role'
+
 )"
 
 );
 
-$_SESSION['success']=
-"Registration Successful";
+
+/* GET USER ID */
+
+$userId=$conn->insert_id;
+
+
+/* AUTO CREATE SELLER PROFILE */
+
+if($role=="seller"){
+
+$conn->query(
+
+"INSERT INTO seller_profiles(
+
+user_id,
+shop_name,
+address,
+status
+
+)
+
+VALUES(
+
+'$userId',
+'$fullname Shop',
+'Not Set',
+'Approved'
+
+)"
+
+);
+
+}
+
+
+/* REDIRECT */
 
 header(
 "location:login.php"
 );
+
+?>

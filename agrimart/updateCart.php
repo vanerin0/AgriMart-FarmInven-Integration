@@ -1,6 +1,11 @@
 <?php
 
-session_start();
+include("checkAuth.php");
+
+if(!isset($_SESSION['role']) || $_SESSION['role'] !== "customer"){
+    header("location:product.php");
+    exit();
+}
 
 $id=$_GET['id'];
 

@@ -1,3 +1,11 @@
+from flask import *
+import pymysql
+import pymysql
+from flask import render_template,redirect
+
+pymysql.install_as_MySQLdb()
+
+from flask_mysqldb import MySQL
 from flask import Flask, render_template, request, redirect, session
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
@@ -30,7 +38,8 @@ mysql = MySQL(app)
 UPLOAD_FOLDER="static/uploads"
 
 app.config["UPLOAD_FOLDER"]=UPLOAD_FOLDER
-
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config["DEBUG"] = True
 
 # ==========================
 # HOME
@@ -43,211 +52,38 @@ def home():
 
 
 # ==========================
-# REGISTER
-# ==========================
-
-@app.route(
-"/register",
-methods=["GET","POST"]
-)
-def register():
-
-    if request.method=="POST":
-
-        fullname=request.form["fullname"]
-
-        email=request.form["email"]
-
-        password=request.form["password"]
-
-        role=request.form["role"]
-
-
-        cur=mysql.connection.cursor()
-
-
-        cur.execute(
-        """
-        SELECT *
-        FROM users
-        WHERE email=%s
-        """,
-        (email,)
-        )
-
-
-        existing=cur.fetchone()
-
-
-        if existing:
-
-            cur.close()
-
-            return "Email already exists"
-
-
-        cur.execute(
-        """
-        INSERT INTO users
-        (
-        fullname,
-        email,
-        password,
-        role
-        )
-
-        VALUES
-        (
-        %s,
-        %s,
-        %s,
-        %s
-        )
-        """,
-
-        (
-        fullname,
-        email,
-        password,
-        role
-        )
-
-        )
-
-
-        mysql.connection.commit()
-
-        cur.close()
-
-        return redirect(
-        "/login"
-        )
-
-
-    return render_template(
-    "register.html"
-    )
-
-
-# ==========================
-# LOGIN
-# ==========================
-
-@app.route(
-"/login",
-methods=["GET","POST"]
-)
-
-def login():
-
-    if request.method=="POST":
-
-        email=request.form["email"]
-
-        password=request.form["password"]
-
-
-        cur=mysql.connection.cursor()
-
-
-        cur.execute(
-        """
-        SELECT *
-        FROM users
-
-        WHERE email=%s
-        AND password=%s
-        """,
-
-        (
-        email,
-        password
-        )
-
-        )
-
-
-        user=cur.fetchone()
-
-
-        cur.close()
-
-
-        if user:
-
-            session["user_id"]=user[0]
-
-            session["fullname"]=user[1]
-
-            session["role"]=user[4]
-
-            return redirect(
-            "/dashboard"
-            )
-
-
-        return "Invalid Login"
-
-
-    return render_template(
-    "login.html"
-    )
-
-
-# ==========================
 # DASHBOARD
 # ==========================
 
 @app.route("/dashboard")
 def dashboard():
 
-    if "user_id" not in session:
-        return redirect("/login")
+    cur=mysql.connection.cursor()
 
-    cur = mysql.connection.cursor()
-
-    # total products
+    # TOTAL PRODUCTS
     cur.execute(
         "SELECT COUNT(*) FROM farm_products"
     )
 
-    totalProducts = cur.fetchone()[0]
+    totalProducts= cur.fetchone()[0]
 
-
-    # total stock
+    # INVENTORY LOGS
     cur.execute(
-        "SELECT SUM(stock_level) FROM farm_products"
+        "SELECT COUNT(*) FROM inventory_logs"
     )
 
-    totalStock = cur.fetchone()[0]
+    totalLogs= cur.fetchone()[0]
 
-    if totalStock is None:
-        totalStock = 0
-
-
-    # low stock alerts
+    # LOW STOCK ALERTS
     cur.execute(
         """
-        SELECT *
+        SELECT COUNT(*)
         FROM farm_products
-        WHERE stock_level <= 10
+        WHERE stock_level <= 5
         """
     )
 
-    lowStock = cur.fetchall()
-
-
-    # recent logs
-    cur.execute(
-        """
-        SELECT *
-        FROM inventory_logs
-        ORDER BY id DESC
-        LIMIT 5
-        """
-    )
-
-    recentLogs = cur.fetchall()
+    lowStock= cur.fetchone()[0]
 
     cur.close()
 
@@ -256,12 +92,13 @@ def dashboard():
         "dashboard.html",
 
         totalProducts=totalProducts,
-        totalStock=totalStock,
-        lowStock=lowStock,
-        recentLogs=recentLogs
+
+        totalLogs=totalLogs,
+
+        lowStock=lowStock
 
     )
-
+    
 # ==========================
 # REPORTS DASHBOARD + CHARTS
 # ==========================
@@ -347,19 +184,41 @@ def reports():
 @app.route("/products")
 def products():
 
-    cur=mysql.connection.cursor()
+    try:
 
-    cur.execute(
-    "SELECT * FROM farm_products"
-    )
+        conn = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="agrimart_db"
+        )
 
-    products=cur.fetchall()
+        cur = conn.cursor()
 
-    return render_template(
-    "products.html",
-    products=products
-    )
-    
+        cur.execute("""
+            SELECT
+            id,
+            product_name,
+            product_uuid,
+            stock_level,
+            image
+            FROM products
+        """)
+
+        products = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        return render_template(
+            "products.html",
+            products=products
+        )
+
+    except Exception as e:
+
+        return f"ERROR: {str(e)}"
+        
 # ==========================
 # ADD PRODUCT
 # ==========================
@@ -719,6 +578,175 @@ def updateProduct(id):
     product=product
     )
 
+            
+@app.route("/orders")
+def adminOrders():
+
+    conn=pymysql.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="agrimart_db"
+    )
+
+    cur=conn.cursor()
+
+    cur.execute("""
+        SELECT
+        order_id,
+        customer_id,
+        total_amount,
+        status
+        FROM orders
+        ORDER BY order_id DESC
+    """)
+
+    orders=cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "orders.html",
+        orders=orders
+    )
+
+@app.route("/approveOrder/<int:id>")
+def approveOrder(id):
+
+    conn=pymysql.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="agrimart_db"
+    )
+
+    cur=conn.cursor()
+
+    cur.execute(
+        "UPDATE orders SET status='Completed' WHERE order_id=%s",
+        (id,)
+    )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return redirect("/orders")
+
+
+@app.route("/declineOrder/<int:id>")
+def declineOrder(id):
+
+    conn=pymysql.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="agrimart_db"
+    )
+
+    cur=conn.cursor()
+
+    cur.execute(
+        "UPDATE orders SET status='Cancelled' WHERE order_id=%s",
+        (id,)
+    )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    return redirect("/orders")
+
+
+
+@app.route("/sync")
+def sync():
+
+    try:
+
+        farm = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="farminven_db"
+        )
+
+        agri = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="agrimart_db"
+        )
+
+        farmCur=farm.cursor()
+        agriCur=agri.cursor()
+
+        agriCur.execute("""
+
+        SELECT
+        product_uuid,
+        sku_code,
+        product_name,
+        stock_level,
+        image
+
+        FROM products
+
+        """)
+
+        products=agriCur.fetchall()
+
+
+        for p in products:
+
+            farmCur.execute("""
+
+            SELECT *
+            FROM products
+            WHERE product_uuid=%s
+
+            """,(p[0],))
+
+            exists=farmCur.fetchone()
+
+
+            if not exists:
+
+                farmCur.execute("""
+
+                INSERT INTO products
+                (
+                product_uuid,
+                sku_code,
+                product_name,
+                stock_level,
+                image
+                )
+
+                VALUES
+                (%s,%s,%s,%s,%s)
+
+                """,p)
+
+
+        farm.commit()
+
+        farmCur.close()
+        agriCur.close()
+
+        farm.close()
+        agri.close()
+
+        return redirect("/products")
+
+
+    except Exception as e:
+
+        return f"SYNC ERROR: {str(e)}"
+        
 # ==========================
 # START APP
 # ==========================

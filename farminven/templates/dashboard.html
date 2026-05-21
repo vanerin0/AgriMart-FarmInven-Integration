@@ -1,61 +1,494 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Dashboard</title>
+    <title>FarmInven Dashboard</title>
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+
+        background: linear-gradient(135deg, #eef7ee, #f4f8fb);
+
+        overflow-x: hidden;
+      }
+
+      /* NAVBAR */
+
+      .navbar {
+        padding: 18px 40px;
+
+        background: rgba(255, 255, 255, 0.75);
+
+        backdrop-filter: blur(10px);
+
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      }
+
+      .logo {
+        font-size: 28px;
+        font-weight: 700;
+        color: #198754;
+
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .logo i {
+        font-size: 32px;
+      }
+
+      .top-btn {
+        border: none;
+
+        padding: 12px 22px;
+
+        border-radius: 14px;
+
+        font-weight: 600;
+
+        background: linear-gradient(135deg, #198754, #20c997);
+
+        color: white;
+
+        transition: 0.3s;
+      }
+
+      .top-btn:hover {
+        transform: translateY(-2px);
+
+        box-shadow: 0 8px 20px rgba(25, 135, 84, 0.25);
+      }
+
+      /* HERO */
+
+      .hero {
+        padding: 60px 20px 30px;
+
+        text-align: center;
+      }
+
+      .hero h1 {
+        font-size: 50px;
+
+        font-weight: 700;
+
+        color: #1b4332;
+
+        margin-bottom: 15px;
+      }
+
+      .hero p {
+        color: #6c757d;
+
+        font-size: 18px;
+
+        max-width: 700px;
+
+        margin: auto;
+      }
+
+      /* CARDS */
+
+      .dashboard {
+        padding: 20px 10px 60px;
+      }
+
+      .dashboard-card {
+        position: relative;
+
+        height: 220px;
+
+        border-radius: 30px;
+
+        overflow: hidden;
+
+        padding: 30px;
+
+        color: white;
+
+        text-decoration: none;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: space-between;
+
+        transition: 0.35s;
+
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+      }
+
+      .dashboard-card:hover {
+        transform: translateY(-10px) scale(1.02);
+      }
+
+      .dashboard-card::before {
+        content: "";
+
+        position: absolute;
+
+        top: -40px;
+        right: -40px;
+
+        width: 140px;
+        height: 140px;
+
+        background: rgba(255, 255, 255, 0.15);
+
+        border-radius: 50%;
+      }
+
+      .dashboard-card::after {
+        content: "";
+
+        position: absolute;
+
+        bottom: -60px;
+        right: -60px;
+
+        width: 180px;
+        height: 180px;
+
+        background: rgba(255, 255, 255, 0.08);
+
+        border-radius: 50%;
+      }
+
+      .card-top {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        z-index: 2;
+      }
+
+      .card-icon {
+        font-size: 50px;
+      }
+
+      .arrow {
+        font-size: 28px;
+
+        opacity: 0.8;
+      }
+
+      .card-bottom {
+        z-index: 2;
+      }
+
+      .card-title {
+        font-size: 24px;
+
+        font-weight: 700;
+
+        margin-bottom: 10px;
+      }
+
+      .card-desc {
+        font-size: 14px;
+
+        opacity: 0.9;
+
+        line-height: 1.6;
+      }
+
+      /* CARD COLORS */
+
+      .inventory {
+        background: linear-gradient(135deg, #198754, #20c997);
+      }
+
+      .add {
+        background: linear-gradient(135deg, #0d6efd, #3b82f6);
+      }
+
+      .logs {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      }
+
+      .reports {
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      }
+
+      .sync {
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+      }
+
+      .analytics {
+        background: linear-gradient(135deg, #ef4444, #f97316);
+      }
+
+      /* STATS */
+
+      .stats {
+        margin-top: 40px;
+      }
+
+      .stat-card {
+        background: white;
+
+        border-radius: 25px;
+
+        padding: 25px;
+
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+
+        transition: 0.3s;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .stat-icon {
+        width: 60px;
+        height: 60px;
+
+        border-radius: 18px;
+
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+
+        font-size: 28px;
+
+        color: white;
+
+        margin-bottom: 20px;
+      }
+
+      .green {
+        background: #198754;
+      }
+
+      .blue {
+        background: #0d6efd;
+      }
+
+      .orange {
+        background: #f59e0b;
+      }
+
+      .stat-title {
+        color: #6c757d;
+
+        font-size: 15px;
+
+        margin-bottom: 8px;
+      }
+
+      .stat-number {
+        font-size: 35px;
+
+        font-weight: 700;
+
+        color: #1b4332;
+      }
+
+      /* FOOTER */
+
+      .footer {
+        text-align: center;
+
+        padding: 30px;
+
+        color: #6c757d;
+
+        font-size: 14px;
+      }
+
+      /* MOBILE */
+
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 36px;
+        }
+
+        .dashboard-card {
+          height: 200px;
+        }
+      }
+    </style>
   </head>
 
   <body>
-    <nav class="navbar navbar-dark bg-success">
-      <div class="container">
-        <span> FarmInven Dashboard </span>
+    <!-- NAVBAR -->
 
-        <a href="/logout" class="btn btn-light"> Logout </a>
+    <nav class="navbar">
+      <div class="container-fluid">
+        <div class="logo">
+          <i class="bi bi-flower1"></i>
+
+          FarmInven
+        </div>
+
+        <button class="top-btn">
+          <i class="bi bi-bar-chart-line-fill"></i>
+          Inventory Management
+        </button>
       </div>
     </nav>
 
-    <div class="container mt-5">
-      <div class="card p-5 shadow">
-        <h1>Welcome {{session.fullname}}</h1>
+    <!-- HERO -->
 
-        <br />
+    <section class="hero">
+      <h1>🌾Inventory Dashboard</h1>
 
-        Role: {{session.role}}
+      <p>
+        Monitor farm inventory, manage products, track stock levels, synchronize
+        AgriMart products, and generate analytics reports in real-time.
+      </p>
+    </section>
+
+    <!-- DASHBOARD -->
+
+    <div class="container dashboard">
+      <div class="row g-4">
+        <!-- INVENTORY -->
+
+        <div class="col-lg-4 col-md-6">
+          <a href="/products" class="dashboard-card inventory">
+            <div class="card-top">
+              <div class="card-icon">📦</div>
+
+              <div class="arrow">
+                <i class="bi bi-arrow-up-right-circle-fill"></i>
+              </div>
+            </div>
+
+            <div class="card-bottom">
+              <div class="card-title">Inventory</div>
+
+              <div class="card-desc">
+                Manage farm products, stocks, and monitor inventory
+                availability.
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <!-- ADD PRODUCT -->
+
+        <div class="col-lg-4 col-md-6">
+          <a href="/addProduct" class="dashboard-card add">
+            <div class="card-top">
+              <div class="card-icon">➕</div>
+
+              <div class="arrow">
+                <i class="bi bi-arrow-up-right-circle-fill"></i>
+              </div>
+            </div>
+
+            <div class="card-bottom">
+              <div class="card-title">Add Product</div>
+
+              <div class="card-desc">
+                Upload new products with images, stock levels, and inventory
+                details.
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <!-- LOGS -->
+
+        <div class="col-lg-4 col-md-6">
+          <a href="/logs" class="dashboard-card logs">
+            <div class="card-top">
+              <div class="card-icon">📝</div>
+
+              <div class="arrow">
+                <i class="bi bi-arrow-up-right-circle-fill"></i>
+              </div>
+            </div>
+
+            <div class="card-bottom">
+              <div class="card-title">Inventory Logs</div>
+
+              <div class="card-desc">
+                Track inventory changes, updates, and stock movement history.
+              </div>
+            </div>
+          </a>
+        </div>
       </div>
 
-      <a href="/products" class="btn btn-success mt-3"> Manage Inventory </a>
+      <!-- STATS -->
+
+      <div class="row g-4 stats">
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <i class="bi bi-box-seam"></i>
+            </div>
+
+            <div class="stat-title">Total Products</div>
+
+            <div class="stat-number">{{totalProducts}}</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="stat-icon blue">
+              <i class="bi bi-bar-chart"></i>
+            </div>
+
+            <div class="stat-title">Inventory Logs</div>
+
+            <div class="stat-number">{{totalLogs}}</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="stat-icon orange">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="stat-title">Low Stock Alerts</div>
+
+            <div class="stat-number">{{lowStock}}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="row mt-4">
-      <div class="col-md-6">
-        <div class="card p-4">
-          <h4>⚠ Low Stock Alerts</h4>
+    <!-- FOOTER -->
 
-          {% for item in lowStock %}
-
-          <div class="alert alert-danger">
-            {{item[1]}} only has {{item[3]}} stocks left
-          </div>
-
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="card p-4">
-          <h4>📋 Recent Inventory Activity</h4>
-
-          {% for log in recentLogs %}
-
-          <div class="border p-2 mb-2 rounded">{{log[1]}}</div>
-
-          {% endfor %}
-        </div>
-      </div>
+    <div class="footer">
+      © 2026 FarmInven — Smart Farmer Inventory Management System
     </div>
   </body>
 </html>

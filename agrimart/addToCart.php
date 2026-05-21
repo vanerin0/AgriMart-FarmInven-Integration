@@ -4,6 +4,14 @@ session_start();
 
 include("checkAuth.php");
 
+if(!isset($_SESSION['role']) || $_SESSION['role']!="customer"){
+
+header("location:product.php");
+
+exit();
+
+}
+
 $conn=new mysqli(
 "localhost",
 "root",
@@ -11,9 +19,17 @@ $conn=new mysqli(
 "agrimart_db"
 );
 
+if($conn->connect_error){
+
+die("Database Error");
+
+}
+
+
 $id=$_GET['id'];
 
-$product=$conn->query(
+
+$result=$conn->query(
 
 "SELECT *
 FROM products
@@ -21,50 +37,44 @@ WHERE id='$id'"
 
 );
 
-if(
-$product->num_rows==0
-){
+
+if($result->num_rows==0){
 
 die("Product not found");
 
 }
 
-$row=
-$product->fetch_assoc();
 
-// prevent adding when out of stock
-if((int)$row['stock_level'] <= 0){
-	die("Product is out of stock");
+$row=$result->fetch_assoc();
+
+
+if((int)$row['stock_level']<=0){
+
+die("Out of stock");
+
 }
 
 
-if(
-!isset($_SESSION['cart'])
-){
+/* create cart session */
+
+if(!isset($_SESSION['cart'])){
 
 $_SESSION['cart']=[];
 
 }
 
 
+/* check if already exists */
+
 $found=false;
 
-
-foreach(
-$_SESSION['cart']
-as &$item
-){
+foreach($_SESSION['cart'] as $key=>$item){
 
 if(
-$item['id']==$id
+$item['product_uuid']==$row['product_uuid']
 ){
 
-		// only increase if it won't exceed available stock
-		if($item['quantity'] < (int)$row['stock_level']){
-			$item['quantity']++;
-		}else{
-			die("Cannot add more than available stock");
-		}
+$_SESSION['cart'][$key]['quantity']++;
 
 $found=true;
 
@@ -75,32 +85,30 @@ break;
 }
 
 
+/* add new item */
+
 if(!$found){
 
 $_SESSION['cart'][]=[
 
-"id"=>$row['id'],
-
 "product_uuid"=>$row['product_uuid'],
+
+"id"=>$row['id'],
 
 "name"=>$row['product_name'],
 
 "price"=>$row['price'],
 
-"stock"=>$row['stock_level'],
+"quantity"=>1,
 
-"image"=>$row['image'],
-
-"quantity"=>1
+"image"=>$row['image']
 
 ];
 
 }
 
 
-header(
-"location:cart.php"
-);
+header("location:cart.php");
 
 exit();
 

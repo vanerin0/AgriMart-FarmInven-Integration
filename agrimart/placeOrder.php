@@ -1,102 +1,105 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+session_start();
+
 include("checkAuth.php");
 
-error_reporting(E_ALL);
-ini_set('display_errors',1);
+/* DATABASE */
 
-$conn=new mysqli(
-"localhost",
-"root",
-"",
-"agrimart_db"
+$conn = new mysqli(
+	"localhost",
+	"root",
+	"",
+	"agrimart_db"
 );
 
-if(!isset($_SESSION['cart']) || count($_SESSION['cart'])==0){
+if ($conn->connect_error) {
 
-die("Cart Empty");
-
+	die("Database Failed");
 }
 
-$email=$_SESSION['email'];
+
+/* CHECK CART */
+
+if (
+	!isset($_SESSION['cart']) ||
+	count($_SESSION['cart']) == 0
+) {
+
+	die("Cart is empty");
+}
 
 
-/* check if customer exists */
+/* USER */
 
-$customerQuery=$conn->query(
+$email = $_SESSION['email'];
 
-"SELECT *
+$name = $_SESSION['fullname'];
+
+
+/* FIND CUSTOMER */
+
+$customerQuery = $conn->query(
+
+	"SELECT *
 FROM customers
-WHERE email='$email'"
+WHERE customer_email='$email'"
 
 );
 
 
-/* auto create customer profile if missing */
+/* CREATE CUSTOMER */
 
-if($customerQuery->num_rows==0){
+if ($customerQuery->num_rows > 0) {
 
-$name=$_SESSION['fullname'];
+	$customer = $customerQuery->fetch_assoc();
+
+	$customer_id = $customer['customer_id'];
+} else {
+
+	$conn->query(
+
+		"INSERT INTO customers
+    (
+    full_name,
+    customer_email
+    )
+
+    VALUES
+    (
+    '$name',
+    '$email'
+    )"
+
+	);
+
+	$customer_id = $conn->insert_id;
+}
+
+
+/* TOTAL */
+
+$total = 0;
+
+foreach ($_SESSION['cart'] as $item) {
+
+	$subtotal =
+		$item['price']
+		*
+		$item['quantity'];
+
+	$total += $subtotal;
+}
+
+
+/* CREATE ORDER */
 
 $conn->query(
 
-"INSERT INTO customers
-(
-full_name,
-email
-)
-
-VALUES
-(
-'$name',
-'$email'
-)"
-
-);
-
-$customer_id=
-$conn->insert_id;
-
-}else{
-
-$customer=
-$customerQuery->fetch_assoc();
-
-$customer_id=
-$customer['customer_id'];
-
-}
-
-
-$total=0;
-
-foreach($_SESSION['cart'] as $item){
-
-$total+=
-$item['price']
-*
-$item['quantity'];
-
-}
-
-// Check stock availability before creating order
-foreach($_SESSION['cart'] as $item){
-	$pq = $conn->query("SELECT stock_level, product_name FROM products WHERE product_uuid='".$item['product_uuid']."'");
-	if($pq->num_rows==0){
-		die('Product not found: '.$item['name']);
-	}
-	$prow = $pq->fetch_assoc();
-	if((int)$item['quantity'] > (int)$prow['stock_level']){
-		die('Insufficient stock for: '. $prow['product_name']);
-	}
-}
-
-
-/* create order */
-
-$conn->query(
-
-"INSERT INTO orders
+	"INSERT INTO orders
 (
 customer_id,
 total_amount,
@@ -112,19 +115,16 @@ VALUES
 
 );
 
-$orderId=
-$conn->insert_id;
+$order_id = $conn->insert_id;
 
 
-/* save order items */
+/* SAVE ITEMS */
 
 foreach($_SESSION['cart'] as $item){
 
-$subtotal=
+$product_uuid=$item['product_uuid'];
 
-$item['price']
-*
-$item['quantity'];
+$qty=$item['quantity'];
 
 $conn->query(
 
@@ -132,124 +132,40 @@ $conn->query(
 (
 order_id,
 product_uuid,
-quantity,
-price,
-subtotal
+quantity
 )
 
 VALUES
 (
-'$orderId',
-'".$item['product_uuid']."',
-'".$item['quantity']."',
-'".$item['price']."',
-'$subtotal'
+'$order_id',
+'$product_uuid',
+'$qty'
 )"
+
+);
+
+
+/* deduct stock */
+
+$conn->query(
+
+"UPDATE products
+SET stock_level=
+stock_level-'$qty'
+WHERE product_uuid='$product_uuid'
+AND stock_level>='$qty'"
 
 );
 
 }
 
-// reduce product stock levels
-foreach($_SESSION['cart'] as $item){
-	$conn->query("UPDATE products SET stock_level = stock_level - " . (int)$item['quantity'] . " WHERE product_uuid='".$item['product_uuid']."'");
-}
-
+/* CLEAR CART */
 
 unset($_SESSION['cart']);
 
-?>
 
-<!DOCTYPE html>
+/* SUCCESS */
 
-<html>
+header("location:orders.php");
 
-<head>
-
-<title>
-
-Order Success
-
-</title>
-
-<style>
-
-body{
-
-font-family:Arial;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-height:100vh;
-
-background:#eef7ee;
-
-}
-
-.card{
-
-background:white;
-
-padding:50px;
-
-border-radius:20px;
-
-text-align:center;
-
-}
-
-a{
-
-padding:15px 25px;
-
-background:#2e7d32;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:10px;
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="card">
-
-<h1>
-
-✅ Order Submitted
-
-</h1>
-
-<br>
-
-Order #
-
-<?php echo $orderId; ?>
-
-<br><br>
-
-Waiting for admin approval
-
-<br><br>
-
-<a href="product.php">
-
-Continue Shopping
-
-</a>
-
-</div>
-
-</body>
-
-</html>
+exit();

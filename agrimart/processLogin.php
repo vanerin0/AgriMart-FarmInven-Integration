@@ -11,16 +11,19 @@ $conn=new mysqli(
 
 if($conn->connect_error){
 
-die(
-"Database Error"
-);
+die("Database Error");
 
 }
+
+
+/* FORM DATA */
 
 $email=$_POST['email'];
 
 $password=$_POST['password'];
 
+
+/* FIND USER */
 
 $result=$conn->query(
 
@@ -31,57 +34,58 @@ WHERE email='$email'"
 );
 
 
-if(
-$result->num_rows==0
-){
+/* USER NOT FOUND */
+
+if($result->num_rows==0){
 
 die(
 
-"User not found"
+"
+<h2 style='font-family:Arial'>
+User not found
+</h2>
+
+<a href='login.php'>
+Back
+</a>
+"
 
 );
 
 }
 
 
-$user=
-$result->fetch_assoc();
+$user=$result->fetch_assoc();
 
 
+/* VERIFY PASSWORD */
 
 if(
 
 password_verify(
-
 $password,
-
 $user['password']
-
 )
 
 ){
 
-/* session data */
+/* SESSION */
 
 $_SESSION['id']=$user['id'];
-
-$_SESSION['role']=$user['role'];
 
 $_SESSION['fullname']=$user['fullname'];
 
 $_SESSION['email']=$user['email'];
 
+$_SESSION['role']=$user['role'];
 
-/* role routing */
 
-if(
-$user['role']=="admin"
-){
+/* ADMIN */
+
+if($user['role']=="admin"){
 
 header(
-
 "location:adminDashboard.php"
-
 );
 
 exit();
@@ -89,61 +93,49 @@ exit();
 }
 
 
-elseif(
-$user['role']=="seller"
-){
+/* SELLER */
 
-$check=$conn->query(
-
-"SELECT *
-FROM seller_profiles
-WHERE user_id='".$_SESSION['id']."'
-AND status='Approved'"
-
-);
-
-
-if(
-$check->num_rows>0
-){
+elseif($user['role']=="seller"){
 
 header(
 "location:sellerDashboard.php"
 );
 
-}else{
-
-header(
-"location:sellerRegister.php"
-);
-
-}
-
 exit();
 
 }
 
+
+/* CUSTOMER */
 
 else{
 
 header(
-
 "location:product.php"
-
 );
 
 exit();
 
 }
 
-
 }
+
+
+/* WRONG PASSWORD */
 
 else{
 
 die(
 
-"Wrong Password"
+"
+<h2 style='font-family:Arial'>
+Wrong Password
+</h2>
+
+<a href='login.php'>
+Back
+</a>
+"
 
 );
 

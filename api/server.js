@@ -489,6 +489,182 @@ res.send("INSERT SUCCESS");
 
 });
 
+app.get("/api/orders",(req,res)=>{
+
+db.query(
+
+`
+
+SELECT *
+
+FROM orders
+
+ORDER BY order_id DESC
+
+`,
+
+(err,result)=>{
+
+if(err){
+
+return res.json([]);
+
+}
+
+res.json(result);
+
+}
+
+);
+
+});
+
+app.get("/api/orders/decline/:id",(req,res)=>{
+
+const id=req.params.id;
+
+db.query(
+
+`
+
+UPDATE orders
+
+SET status='Declined'
+
+WHERE order_id=?
+
+`,
+
+[id],
+
+()=>{
+
+res.json({
+
+success:true
+
+});
+
+}
+
+);
+
+});
+
+// =======================
+// GET SELLERS
+// =======================
+
+app.get("/api/sellers",(req,res)=>{
+
+const sql=`
+
+SELECT
+
+sp.id,
+u.fullname,
+u.email,
+sp.shop_name,
+sp.status
+
+FROM seller_profiles sp
+
+LEFT JOIN users u
+ON sp.user_id=u.id
+
+`;
+
+db.query(sql,(err,result)=>{
+
+if(err){
+
+console.log(err);
+
+return res.status(500).json({
+error:err
+});
+
+}
+
+res.json(result);
+
+});
+
+});
+
+// =======================
+// APPROVE SELLER
+// =======================
+
+app.get("/api/approveSeller/:id",(req,res)=>{
+
+const id=req.params.id;
+
+db.query(
+
+`
+
+UPDATE seller_profiles
+
+SET status='Approved'
+
+WHERE id=?
+
+`,
+
+[id],
+
+()=>{
+
+res.json({
+
+success:true
+
+});
+
+}
+
+);
+
+});
+
+
+// =======================
+// DECLINE SELLER
+// =======================
+
+app.get("/api/declineSeller/:id",(req,res)=>{
+
+const id=req.params.id;
+
+db.query(
+
+`
+
+UPDATE seller_profiles
+
+SET status='Declined'
+
+WHERE id=?
+
+`,
+
+[id],
+
+()=>{
+
+res.json({
+
+success:true
+
+});
+
+}
+
+);
+
+});
+
 app.listen(PORT, () => {
   console.log("Server running on port 3001");
 });

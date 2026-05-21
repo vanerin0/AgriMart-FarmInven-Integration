@@ -412,6 +412,8 @@ Products
 
 </a>
 
+<?php if(isset($_SESSION['role']) && $_SESSION['role'] === "customer"){ ?>
+
 <a href="cart.php">
 
 Cart
@@ -424,11 +426,17 @@ Orders
 
 </a>
 
+<?php } ?>
+
+<?php if(isset($_SESSION['role']) && $_SESSION['role'] === "seller"){ ?>
+
 <a href="sellerDashboard.php">
 
 Seller
 
 </a>
+
+<?php } ?>
 
 <a href="logout.php">
 
@@ -534,7 +542,7 @@ if(
 ?>
 
 <img
-src="http://127.0.0.1:5000/static/uploads/<?php echo $row['image'];?>"
+src="uploads/<?php echo $row['image']; ?>"
 >
 
 <?php
@@ -605,6 +613,8 @@ if((int)$row['stock_level']>0){
 
 <?php if((int)$row['stock_level']>0){ ?>
 
+<?php if(isset($_SESSION['role']) && $_SESSION['role'] === "customer"){ ?>
+
 <a href="addToCart.php?id=<?php echo $row['id'];?>">
 
 <button>
@@ -614,6 +624,14 @@ Add To Cart 🛒
 </button>
 
 </a>
+
+<?php } else { ?>
+
+<button disabled style="opacity:.7;cursor:not-allowed;">
+Customers only
+</button>
+
+<?php } ?>
 
 <?php } else { ?>
 

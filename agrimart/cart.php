@@ -3,7 +3,10 @@
 session_start();
 
 include("checkAuth.php");
-
+if(!isset($_SESSION['role']) || $_SESSION['role'] !== "customer"){
+    header("location:product.php");
+    exit();
+}
 if(!isset($_SESSION['cart'])){
 
 $_SESSION['cart']=[];

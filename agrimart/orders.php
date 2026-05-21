@@ -1,37 +1,54 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors',1);
+
 include("checkAuth.php");
 
-$conn=new mysqli(
+if(
+!isset($_SESSION['role']) ||
+$_SESSION['role'] !== "customer"
+){
+
+header("location:product.php");
+
+exit();
+
+}
+
+$conn = new mysqli(
 "localhost",
 "root",
 "",
 "agrimart_db"
 );
 
-$email=$_SESSION['email'];
+$email = $_SESSION['email'];
 
-$name=$_SESSION['fullname'];
+$name = $_SESSION['fullname'];
 
 
-/* auto create customer if missing */
+/* CHECK CUSTOMER */
 
-$customer=$conn->query(
+$customer = $conn->query(
 
 "SELECT *
 FROM customers
-WHERE email='$email'"
+WHERE customer_email='$email'"
 
 );
 
-if($customer->num_rows==0){
+
+/* CREATE CUSTOMER */
+
+if($customer->num_rows == 0){
 
 $conn->query(
 
 "INSERT INTO customers
 (
 full_name,
-email
+customer_email
 )
 
 VALUES
@@ -42,21 +59,20 @@ VALUES
 
 );
 
-$customer_id=
-$conn->insert_id;
+$customer_id = $conn->insert_id;
 
 }else{
 
-$data=
-$customer->fetch_assoc();
+$data = $customer->fetch_assoc();
 
-$customer_id=
-$data['customer_id'];
+$customer_id = $data['customer_id'];
 
 }
 
 
-$orders=$conn->query(
+/* GET ORDERS */
+
+$orders = $conn->query(
 
 "SELECT *
 FROM orders
@@ -74,7 +90,10 @@ ORDER BY order_id DESC"
 
 <title>My Orders</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap"
+rel="stylesheet"
+>
 
 <style>
 
@@ -86,24 +105,31 @@ font-family:Poppins,sans-serif;
 }
 
 body{
+
 background:
 linear-gradient(
 135deg,
 #eef7ee,
 #f5f7fa
 );
+
 padding:30px;
+
 }
 
 .navbar{
 
 background:white;
+
 padding:20px 30px;
 
 display:flex;
+
 justify-content:space-between;
 
-border-radius:20px;
+align-items:center;
+
+border-radius:25px;
 
 box-shadow:
 0 10px 25px rgba(0,0,0,.08);
@@ -115,7 +141,9 @@ margin-bottom:30px;
 .logo{
 
 font-size:30px;
+
 font-weight:700;
+
 color:#2e7d32;
 
 }
@@ -123,8 +151,30 @@ color:#2e7d32;
 .nav a{
 
 margin-left:20px;
+
 text-decoration:none;
+
 color:#555;
+
+font-weight:500;
+
+}
+
+.nav a:hover{
+
+color:#2e7d32;
+
+}
+
+.title{
+
+font-size:40px;
+
+font-weight:700;
+
+margin-bottom:30px;
+
+color:#222;
 
 }
 
@@ -141,11 +191,20 @@ margin-bottom:25px;
 box-shadow:
 0 10px 25px rgba(0,0,0,.08);
 
+transition:.3s;
+
+}
+
+.card:hover{
+
+transform:
+translateY(-5px);
+
 }
 
 .badge{
 
-padding:10px 15px;
+padding:10px 18px;
 
 border-radius:30px;
 
@@ -158,25 +217,34 @@ float:right;
 }
 
 .pending{
+
 background:#fff3cd;
+
 color:#856404;
+
 }
 
 .completed{
+
 background:#d4edda;
+
 color:#155724;
+
 }
 
 .cancelled{
+
 background:#f8d7da;
+
 color:#721c24;
+
 }
 
 .product{
 
 padding:15px;
 
-margin-top:10px;
+margin-top:15px;
 
 background:#f9fafb;
 
@@ -188,11 +256,26 @@ border-radius:15px;
 
 background:white;
 
-padding:50px;
+padding:60px;
 
 text-align:center;
 
 border-radius:25px;
+
+box-shadow:
+0 10px 25px rgba(0,0,0,.08);
+
+}
+
+.total{
+
+font-size:20px;
+
+font-weight:700;
+
+color:#2e7d32;
+
+margin-top:10px;
 
 }
 
@@ -201,7 +284,6 @@ border-radius:25px;
 </head>
 
 <body>
-
 
 <div class="navbar">
 
@@ -236,24 +318,34 @@ Logout
 </div>
 
 
-<h1>
+<div class="title">
 
 🛒 My Orders
 
-</h1>
-
-<br>
+</div>
 
 
 <?php
 
-if($orders->num_rows==0){
+if($orders->num_rows == 0){
 
 ?>
 
 <div class="empty">
 
-No Orders Yet
+<h2>
+
+No Orders Yet 🛒
+
+</h2>
+
+<br>
+
+<p>
+
+Start shopping fresh farm products
+
+</p>
 
 </div>
 
@@ -262,12 +354,9 @@ No Orders Yet
 }
 
 
-while(
-$order=
-$orders->fetch_assoc()
-){
+while($order = $orders->fetch_assoc()){
 
-$status=
+$status =
 strtolower(
 $order['status']
 );
@@ -277,7 +366,7 @@ $order['status']
 <div class="card">
 
 <div
-class="badge <?php echo $status;?>"
+class="badge <?php echo $status; ?>"
 >
 
 <?php
@@ -299,15 +388,14 @@ echo $order['order_id'];
 
 <br>
 
+<div class="total">
+
 Total:
+₱<?php echo $order['total_amount']; ?>
 
-₱
+</div>
 
-<?php
-echo $order['total_amount'];
-?>
-
-<br><br>
+<br>
 
 <h3>
 
@@ -315,14 +403,11 @@ Products
 
 </h3>
 
-
 <?php
 
-$id=
-$order['order_id'];
+$id = $order['order_id'];
 
-$items=
-$conn->query(
+$items = $conn->query(
 
 "SELECT
 
@@ -333,7 +418,7 @@ FROM order_items oi
 
 JOIN products p
 
-ON oi.product_uuid=
+ON oi.product_uuid =
 p.product_uuid
 
 WHERE oi.order_id='$id'"
@@ -341,10 +426,7 @@ WHERE oi.order_id='$id'"
 );
 
 
-while(
-$item=
-$items->fetch_assoc()
-){
+while($item = $items->fetch_assoc()){
 
 ?>
 
@@ -358,13 +440,10 @@ echo $item['product_name'];
 
 </b>
 
-<br>
+<br><br>
 
 Quantity:
-
-<?php
-echo $item['quantity'];
-?>
+<?php echo $item['quantity']; ?>
 
 </div>
 
